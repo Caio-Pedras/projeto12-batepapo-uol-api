@@ -83,6 +83,13 @@ app.post("/messages", async (req, res) => {
   }
   message.text = stripHtml(req.body.text).result.trim();
   try {
+    const participant = await db
+      .collection("participants")
+      .findOne({ name: from });
+    if (!participant) {
+      res.sendStatus(422);
+      return;
+    }
     await db.collection("messages").insertOne(message);
     res.sendStatus(201);
   } catch (err) {
@@ -99,7 +106,6 @@ app.get("/messages", async (req, res) => {
       const userPrivateMessage = message.to === user || message.from === user;
       return publicMessage || userPrivateMessage;
     });
-
     messagesDisplay = messages.reverse().splice(0, limit);
     messagesDisplay = messagesDisplay.reverse();
     res.send(messagesDisplay);
